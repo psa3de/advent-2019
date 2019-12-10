@@ -7,32 +7,89 @@ import (
     "log"
     "strings"
     "strconv"
+    "math"
+//    "sort"
 )
 
-func opcodeOne(Index int, Input []int) ([]int, error) {
-    firstIndex := Input[Index+1]
-    secondIndex := Input[Index+2]
-    thirdIndex := Input[Index+3]
-    firstValue := Input[firstIndex]
-    secondValue := Input[secondIndex]
-    calculatedValue := firstValue + secondValue
-    modifiedInput := Input[0:thirdIndex]
-    modifiedInput = append(modifiedInput, calculatedValue)
-    modifiedInput = append(modifiedInput, Input[thirdIndex+1:len(Input)]...)
-    return Input, nil
+// Strategy:
+// Read input
+// Move counter
+// Convert each input segment into a line segment
+// Store segments in two separate arrays
+// Iterate through segments in array 1, check for overlaps with each element of array 2
+
+// Make a struct for line segment
+// x1, y1, x2, y2
+// vertical? boolean
+
+// Overlap:
+// If array 2 segment is vertical
+//  If array 1 segment is horizontal
+//      If min(1.x) <= 2.x1/2.x2 <= max(1.x)
+//          Intersect
+// Else
+//  If array 1 is vertical
+//      If min(1.y) <= 2.y1/2.y2 <= max(1.y2)
+//          Intersect
+//
+
+func (this lineSegment) String() string {
+    return "{" + strconv.Itoa(this.x1) + ", " + strconv.Itoa(this.y1) + "}, {" + strconv.Itoa(this.x2) + ", " + strconv.Itoa(this.y2) + "}"
 }
 
-func opcodeTwo(Index int, Input []int) ([]int, error) {
-    firstIndex := Input[Index+1]
-    secondIndex := Input[Index+2]
-    thirdIndex := Input[Index+3]
-    firstValue := Input[firstIndex]
-    secondValue := Input[secondIndex]
-    calculatedValue := firstValue * secondValue
-    modifiedInput := Input[0:thirdIndex]
-    modifiedInput = append(modifiedInput, calculatedValue)
-    modifiedInput = append(modifiedInput, Input[thirdIndex+1:len(Input)]...)
-    return Input, nil
+func getManhattanDistance(x float64, y float64) (int, error) {
+    xDiff := math.Abs(x)
+    yDiff := math.Abs(y)
+    return int(xDiff + yDiff), nil
+}
+
+func getOverlaps(wire1 []lineSegment, wire2 []lineSegment) ([]int, error){
+    intersectionDists := []int{}
+    for _, element := range wire1 {
+        for _, element2 := range wire2 {
+            fmt.Println("\n")
+//            fmt.Println("WIRE1 " + wire1[index].String())
+//            fmt.Println("WIRE2 " + wire2[indefirstWireX2].String())
+            if (!element.vertical && element2.vertical) {
+                firstWireX1 := float64(element.x1)
+                firstWireX2 := float64(element.x2)
+                firstWireY := float64(element.y1)
+                secondWireY1 := float64(element2.y1)
+                secondWireY2 := float64(element2.y2)
+                secondWireX := float64(element2.x1)
+                if(math.Min(firstWireX1, firstWireX2) < secondWireX && secondWireX < math.Max(firstWireX1, firstWireX2) && math.Min(secondWireY1, secondWireY2) < firstWireY && firstWireY < math.Max(secondWireY1, secondWireY2)) {
+                    intersectY := float64(element.y1)
+                    intersectionDist, _ := getManhattanDistance(secondWireX, intersectY)
+                    intersectionDists = append(intersectionDists, intersectionDist)
+                    fmt.Println("Intersect x", firstWireX1, firstWireX2, secondWireX)
+                    println(intersectionDist)
+                }
+            } else {
+                if (element.vertical && !element2.vertical) {
+                    y1 := float64(element.y1)
+                    y2 := float64(element.y2)
+                    comparisonY := float64(element2.y1)
+                    if(math.Min(y1, y2) < comparisonY && comparisonY < math.Max(y1, y2)) {
+                        fmt.Println("Intersect y", y1, y2, comparisonY)
+                        intersectX := float64(element.x1)
+                        intersectionDist, _ := getManhattanDistance(intersectX, comparisonY)
+                        intersectionDists = append(intersectionDists, intersectionDist)
+                                            println(intersectionDist)
+
+                    }
+                }
+            }
+        }
+    }
+    return intersectionDists, nil
+}
+
+type lineSegment struct {
+    x1 int
+    y1 int
+    x2 int
+    y2 int
+    vertical bool
 }
 
 func main() {
@@ -42,48 +99,47 @@ func main() {
     }
 
     scanner := bufio.NewScanner(file)
-    	scanner.Split(bufio.ScanLines)
-    	var txtlines []string
+    scanner.Split(bufio.ScanLines)
+    var txtlines []string
 
-    	for scanner.Scan() {
-    		txtlines = append(txtlines, scanner.Text())
-    	}
+    for scanner.Scan() {
+        txtlines = append(txtlines, scanner.Text())
+    }
+    file.Close()
 
-    	file.Close()
+    var wires [][]lineSegment
 
-    	for _, eachline := range txtlines {
-    	    stringValues := strings.Split(eachline, ",")
-    	    var intValues = []int{}
-    	    for _, i := range stringValues {
-    	        j, err := strconv.Atoi(i)
-    	        if err != nil {
-    	            panic(err)
-    	        }
-    	        intValues = append(intValues, j)
-    	    }
-
-            var initialValues = []int{}
-            initialValues = append(initialValues, intValues[0])
-            initialValues = append(initialValues, 12, 2)
-            initialValues = append(initialValues, intValues[3:len(intValues)]...)
-            fmt.Println(initialValues)
-
-            EvaluationLoop:
-            for i := 0; i<len(initialValues); i+=4 {
-                opcode := initialValues[i]
-                switch opcode {
-                case 1:
-                    initialValues, _ = opcodeOne(i, initialValues)
-                case 2:
-                    initialValues, _ = opcodeTwo(i, initialValues)
-                case 99:
-                    break EvaluationLoop
-                default:
-                    fmt.Printf("%d", opcode)
-                    fmt.Println(" not implemented")
-                }
-                fmt.Println(initialValues)
-                }
-    	}
-
+    for _, eachline := range txtlines {
+        var wire []lineSegment
+        var x,y = 0,0
+        stringValues := strings.Split(eachline, ",")
+        for i := 0; i<len(stringValues); i++ {
+            entry := stringValues[i]
+            direction := entry[0:1]
+            distance := entry[1:len(entry)]
+            intDistance, _ := strconv.Atoi(distance)
+            switch direction {
+                case "R":
+                    endingX := x + intDistance
+                    wire = append(wire, lineSegment{x, y, endingX, y, false})
+                    x = endingX
+                case "L":
+                    endingX := x - intDistance
+                    wire = append(wire, lineSegment{x, y, endingX, y, false})
+                    x = endingX
+                case "U":
+                    endingY := y + intDistance
+                    wire = append(wire, lineSegment{x, y, x, endingY, true})
+                    y = endingY
+                case "D":
+                    endingY := y - intDistance
+                    wire = append(wire, lineSegment{x, y, x, endingY, true})
+                    y = endingY
+            }
+        }
+        wires = append(wires, wire)
+    }
+    intersectionDists , _ := getOverlaps(wires[0], wires[1])
+    //sortedDists := sort.Ints(intersectionDists)
+    fmt.Println(intersectionDists)
 }
