@@ -8,7 +8,7 @@ import (
     "strings"
     "strconv"
     "math"
-//    "sort"
+    "sort"
 )
 
 // Strategy:
@@ -47,9 +47,6 @@ func getOverlaps(wire1 []lineSegment, wire2 []lineSegment) ([]int, error){
     intersectionDists := []int{}
     for _, element := range wire1 {
         for _, element2 := range wire2 {
-            fmt.Println("\n")
-//            fmt.Println("WIRE1 " + wire1[index].String())
-//            fmt.Println("WIRE2 " + wire2[indefirstWireX2].String())
             if (!element.vertical && element2.vertical) {
                 firstWireX1 := float64(element.x1)
                 firstWireX2 := float64(element.x2)
@@ -61,21 +58,19 @@ func getOverlaps(wire1 []lineSegment, wire2 []lineSegment) ([]int, error){
                     intersectY := float64(element.y1)
                     intersectionDist, _ := getManhattanDistance(secondWireX, intersectY)
                     intersectionDists = append(intersectionDists, intersectionDist)
-                    fmt.Println("Intersect x", firstWireX1, firstWireX2, secondWireX)
-                    println(intersectionDist)
                 }
             } else {
                 if (element.vertical && !element2.vertical) {
-                    y1 := float64(element.y1)
-                    y2 := float64(element.y2)
-                    comparisonY := float64(element2.y1)
-                    if(math.Min(y1, y2) < comparisonY && comparisonY < math.Max(y1, y2)) {
-                        fmt.Println("Intersect y", y1, y2, comparisonY)
+                    firstWireY1 := float64(element.y1)
+                    firstWireY2 := float64(element.y2)
+                    firstWireX := float64(element.x1)
+                    secondWireX1 := float64(element2.x1)
+                    secondWireX2 := float64(element2.x2)
+                    secondWireY := float64(element2.y1)
+                    if(math.Min(firstWireY1, firstWireY2) < secondWireY && secondWireY < math.Max(firstWireY1, firstWireY2) && math.Min(secondWireX1, secondWireX2) < firstWireX && firstWireX < math.Max(secondWireX1, secondWireX2)) {
                         intersectX := float64(element.x1)
-                        intersectionDist, _ := getManhattanDistance(intersectX, comparisonY)
+                        intersectionDist, _ := getManhattanDistance(intersectX, secondWireY)
                         intersectionDists = append(intersectionDists, intersectionDist)
-                                            println(intersectionDist)
-
                     }
                 }
             }
@@ -140,6 +135,6 @@ func main() {
         wires = append(wires, wire)
     }
     intersectionDists , _ := getOverlaps(wires[0], wires[1])
-    //sortedDists := sort.Ints(intersectionDists)
+    sort.Ints(intersectionDists)
     fmt.Println(intersectionDists)
 }
